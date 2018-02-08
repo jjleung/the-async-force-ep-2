@@ -5,15 +5,17 @@ const typeId = document.getElementById("resourceType");
 let input;
 let type;
 let data;
-let species;
 let deepData;
-let filmList = [];
-let needFilms = false;
+let needFilms;
 let builder;
+let uList;
 
 const takeInput = () => {
+  contentId.innerHTML = "";
   input = inputId.value;
   type = typeId.value;
+  needFilms = false;
+
   let typeURL;
   let myData = null;
 
@@ -30,7 +32,6 @@ const takeInput = () => {
     builder = starshipBuilder;
   }
   getData(typeURL);
-  builder();
 };
 
 buttonId.addEventListener("click", takeInput);
@@ -38,8 +39,7 @@ buttonId.addEventListener("click", takeInput);
 const getData = tURL => {
   function reqListener() {
     data = JSON.parse(this.responseText).results;
-    console.log("reqL data: ", data);
-    console.log("input: ", input);
+    console.log("data: ", data);
     checkData();
   }
 
@@ -51,36 +51,24 @@ const getData = tURL => {
 
 const peopleBuilder = () => {
   console.log("people");
-  contentId.innerHTML = "";
-
   eleMaker(contentId, "h2", null, null, myData.name);
   eleMaker(contentId, "p", null, null, myData.gender);
-
-  myData = null;
 };
 
 const planetBuilder = () => {
   console.log("planet");
-  contentId.innerHTML = "";
-
   eleMaker(contentId, "h2", null, null, myData.name);
   eleMaker(contentId, "p", null, null, myData.terrain);
   eleMaker(contentId, "p", null, null, myData.population);
-  addFilms();
-  myData = null;
-  needFilms = false;
+  uList = eleMaker(contentId, "ul", "listId");
 };
 
 const starshipBuilder = () => {
   console.log("starship");
-  contentId.innerHTML = "";
-
   eleMaker(contentId, "h2", null, null, myData.name);
   eleMaker(contentId, "p", null, null, myData.manufacturer);
   eleMaker(contentId, "p", null, null, myData.starship_class);
-  addFilms();
-  myData = null;
-  needFilms = false;
+  uList = eleMaker(contentId, "ul", "listId");
 };
 
 const checkData = () => {
@@ -88,12 +76,15 @@ const checkData = () => {
     if (data[i].name === input) {
       myData = data[i];
       console.log("myData: ", myData);
+      builder();
       if (needFilms) {
         getFilms();
       } else {
-        species = requester(myData.species[0]).name;
+        requester(myData.species[0]);
       }
-      builder();
+
+      myData = null;
+      return true;
     }
   }
   throw new Error('"' + input + '" not found');
@@ -102,14 +93,12 @@ const checkData = () => {
 const requester = tURL => {
   function deepListener() {
     deepData = JSON.parse(this.responseText);
-    console.log(needFilms);
-    if (needFilms === true) {
+    console.log("needFilms: ", needFilms);
+    if (needFilms) {
       eleMaker(uList, "li", null, null, deepData.title);
     } else {
       eleMaker(contentId, "p", null, null, deepData.name);
     }
-    console.log(deepData);
-    console.log("film title: ", deepData.title);
   }
   const deepReq = new XMLHttpRequest();
   deepReq.addEventListener("load", deepListener);
@@ -122,17 +111,6 @@ const getFilms = () => {
   for (let g = 0; g < myData.films.length; g++) {
     requester(myData.films[g]);
   }
-  console.log("films got: ", filmList);
-};
-
-const addFilms = () => {
-  console.log("adding");
-  let uList = eleMaker(contentId, "ul", "listId");
-  for (let f = 0; f < filmList.length; f++) {
-    eleMaker(uList, "li", null, null, filmList[f]);
-    console.log("fl: ", filmList[f]);
-  }
-  filmList = [];
 };
 
 const eleMaker = (parent, ele, id, cls, inner) => {

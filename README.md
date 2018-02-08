@@ -44,3 +44,17 @@ Note: Go to https://swapi.co to preview the data that you will be requesting
 1. Documentation on 'XMLHttpRequest' method:
 https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
 1. Remember that this is a **client side** excercise which means that all the code will be executed via the browser's javascript runtime, which means that our global context is the 'window' object.  Go ahead and type in 'window' in the browser console to inspect the methods on the 'window' object.  In there you will find a method named 'XMLHttpRequest' which you will be using for this excercise.
+
+
+function (url,callback){
+  const oReq = new XMLHttpRequest();
+  oReq.addEventListener("load", callback);
+  oReq.open('get', url);
+  oReq.send();
+  return oReq;
+}
+
+function callcallback(){
+  const data = JSON.parse(this.responseText);
+  return callback.bind(this)(data);
+}
