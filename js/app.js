@@ -5,6 +5,7 @@ const typeId = document.getElementById("resourceType");
 let input;
 let type;
 let data;
+let species;
 let deepData;
 let filmList = [];
 let needFilms = false;
@@ -14,18 +15,22 @@ const takeInput = () => {
   input = inputId.value;
   type = typeId.value;
   let typeURL;
+  let myData = null;
 
   if (type === "people") {
     typeURL = "https://swapi.co/api/people";
     builder = peopleBuilder;
   } else if (type === "planets") {
     typeURL = "https://swapi.co/api/planets";
+    needFilms = true;
     builder = planetBuilder;
   } else if (type === "starships") {
     typeURL = "https://swapi.co/api/starships";
+    needFilms = true;
     builder = starshipBuilder;
   }
   getData(typeURL);
+  builder();
 };
 
 buttonId.addEventListener("click", takeInput);
@@ -35,8 +40,7 @@ const getData = tURL => {
     data = JSON.parse(this.responseText).results;
     console.log("reqL data: ", data);
     console.log("input: ", input);
-    let myData = null;
-    builder();
+    checkData();
   }
 
   const oReq = new XMLHttpRequest();
@@ -48,44 +52,35 @@ const getData = tURL => {
 const peopleBuilder = () => {
   console.log("people");
   contentId.innerHTML = "";
-  if (checkData()) {
-    eleMaker(contentId, "h2", null, null, myData.name);
-    eleMaker(contentId, "p", null, null, myData.gender);
-    eleMaker(contentId, "p", null, null, getDeeperData(myData.species[0]).name);
-    myData = null;
-  } else {
-    throw new Error('"' + input + '" not found');
-  }
+
+  eleMaker(contentId, "h2", null, null, myData.name);
+  eleMaker(contentId, "p", null, null, myData.gender);
+
+  myData = null;
 };
 
 const planetBuilder = () => {
   console.log("planet");
   contentId.innerHTML = "";
-  needFilms = true;
-  if (checkData()) {
-    eleMaker(contentId, "h2", null, null, myData.name);
-    eleMaker(contentId, "p", null, null, myData.terrain);
-    eleMaker(contentId, "p", null, null, myData.population);
-    addFilms();
-    myData = null;
-  } else {
-    throw new Error('"' + input + '" not found');
-  }
+
+  eleMaker(contentId, "h2", null, null, myData.name);
+  eleMaker(contentId, "p", null, null, myData.terrain);
+  eleMaker(contentId, "p", null, null, myData.population);
+  addFilms();
+  myData = null;
+  needFilms = false;
 };
 
 const starshipBuilder = () => {
   console.log("starship");
   contentId.innerHTML = "";
-  needFilms = true;
-  if (checkData()) {
-    eleMaker(contentId, "h2", null, null, myData.name);
-    eleMaker(contentId, "p", null, null, myData.manufacturer);
-    eleMaker(contentId, "p", null, null, myData.starship_class);
-    addFilms();
-    myData = null;
-  } else {
-    throw new Error('"' + input + '" not found');
-  }
+
+  eleMaker(contentId, "h2", null, null, myData.name);
+  eleMaker(contentId, "p", null, null, myData.manufacturer);
+  eleMaker(contentId, "p", null, null, myData.starship_class);
+  addFilms();
+  myData = null;
+  needFilms = false;
 };
 
 const checkData = () => {
@@ -93,18 +88,25 @@ const checkData = () => {
     if (data[i].name === input) {
       myData = data[i];
       console.log("myData: ", myData);
-      getFilms();
-      return true;
+      if (needFilms) {
+        getFilms();
+      } else {
+        species = requester(myData.species[0]).name;
+      }
+      builder();
     }
   }
+  throw new Error('"' + input + '" not found');
 };
 
-const getDeeperData = tURL => {
+const requester = tURL => {
   function deepListener() {
     deepData = JSON.parse(this.responseText);
     console.log(needFilms);
     if (needFilms === true) {
-      filmList.push(deepData.title);
+      eleMaker(uList, "li", null, null, deepData.title);
+    } else {
+      eleMaker(contentId, "p", null, null, deepData.name);
     }
     console.log(deepData);
     console.log("film title: ", deepData.title);
@@ -118,7 +120,7 @@ const getDeeperData = tURL => {
 
 const getFilms = () => {
   for (let g = 0; g < myData.films.length; g++) {
-    getDeeperData(myData.films[g]);
+    requester(myData.films[g]);
   }
   console.log("films got: ", filmList);
 };
